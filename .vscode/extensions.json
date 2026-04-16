@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-node-debug2",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-azuretools.vscode-docker"
+  ]
+}
