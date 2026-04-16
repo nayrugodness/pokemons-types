@@ -75,8 +75,8 @@ const initializeApp = async () => {
     app.use(errorHandler);
 
     // Start server
-    app.listen(PORT, () => {
-      logger.success(`Server running at http://localhost:${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      logger.success(`Server running on port ${PORT}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
       logger.info(`Pokemon API: http://localhost:${PORT}/api/pokemons`);
       logger.info(
