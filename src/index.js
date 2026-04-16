@@ -4,6 +4,15 @@ require("dotenv").config();
 const express = require("express");
 const { AppDataSource } = require("./database/dataSource");
 const { registerModules } = require("./modules");
+const { errorHandler } = require("./middleware/errorHandler");
+
+// Logging utilities
+const logger = {
+  info: (msg) => console.log(`ℹ️  ${msg}`),
+  success: (msg) => console.log(`✅ ${msg}`),
+  warn: (msg) => console.warn(`⚠️  ${msg}`),
+  error: (msg) => console.error(`❌ ${msg}`),
+};
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,11 +49,18 @@ const initializeApp = async () => {
   try {
     // Initialize database
     await AppDataSource.initialize();
-    console.log("✅ Database initialized successfully");
+    logger.success("Database initialized successfully");
 
     // Register modules
     registerModules(app);
-    console.log("✅ Modules registered successfully");
+    logger.success("Modules registered successfully");
+
+    // Request logging middleware
+    app.use((req, res, next) => {
+      const timestamp = new Date().toISOString();
+      logger.info(`[${timestamp}] ${req.method} ${req.path}`);
+      next();
+    });
 
     // 404 handler - MUST be after module routes
     app.use((req, res) => {
@@ -55,18 +71,21 @@ const initializeApp = async () => {
       });
     });
 
+    // Global error handling middleware - MUST be last
+    app.use(errorHandler);
+
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(
-        `📊 Health check available at http://localhost:${PORT}/health`,
-      );
-      console.log(
-        `🎮 Pokemon API available at http://localhost:${PORT}/api/pokemons`,
+      logger.success(`Server running at http://localhost:${PORT}`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
+      logger.info(`Pokemon API: http://localhost:${PORT}/api/pokemons`);
+      logger.info(
+        `Database: ${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || "5432"}`,
       );
     });
   } catch (error) {
-    console.error("❌ Error initializing application:", error);
+    logger.error("Application initialization failed");
+    logger.error(error.message);
     process.exit(1);
   }
 };
