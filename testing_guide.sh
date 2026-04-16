@@ -101,3 +101,56 @@ echo "1. npm install @azure/storage-blob"
 echo "2. docker-compose up --build"
 echo "3. Run tests in another terminal"
 echo "4. Check Azure Portal for uploaded files"
+
+# Azure Deployed API Testing
+echo ""
+echo ""
+echo "================================"
+echo "Azure Production API Tests"
+echo "================================"
+echo "API URL: https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/"
+echo ""
+
+# Test 1: Get all pokemons from Azure (WITH API Key)
+echo "✅ Test 1: GET /api/pokemons FROM AZURE (expect 200)"
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons \
+  -H "x-api-key: mi_super_clave_secreta_123"
+
+# Test 2: Health check from Azure
+echo ""
+echo ""
+echo "✅ Test 2: Health Check from Azure"
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/health
+
+# Test 3: Root endpoint from Azure
+echo ""
+echo ""
+echo "✅ Test 3: Root Endpoint from Azure"
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/
+
+# Test 4: Create pokemon in Azure
+echo ""
+echo ""
+echo "✅ Test 4: POST /api/pokemons TO AZURE (create new)"
+curl -X POST https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: mi_super_clave_secreta_123" \
+  -d '{
+    "name": "Pikachu",
+    "height": 4,
+    "weight": 60,
+    "types": ["Electric"]
+  }'
+
+# Test 5: Missing API Key (should return 401)
+echo ""
+echo ""
+echo "❌ Test 5: GET /api/pokemons FROM AZURE WITHOUT x-api-key (expect 401)"
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons
+
+echo ""
+echo ""
+echo "================================"
+echo "Azure API Testing Complete"
+echo "================================"
+echo "If all tests returned valid responses, your API is running successfully on Azure! 🚀"
