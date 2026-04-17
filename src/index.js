@@ -1,6 +1,15 @@
 require("reflect-metadata");
 require("dotenv").config();
 
+// Environment Diagnostics
+console.log("🛠️ ENV_CHECK:", {
+  port: process.env.PORT || "8080",
+  host: process.env.DB_HOST?.split("@").pop(),
+  apiKey: process.env.PROCESS_API_KEY ? "DEFINED" : "MISSING",
+  node: process.version,
+  dir: __dirname,
+});
+
 const express = require("express");
 const { AppDataSource } = require("./database/dataSource");
 const { registerModules } = require("./modules");
