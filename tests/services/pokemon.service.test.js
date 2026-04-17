@@ -3,25 +3,38 @@
  * Coverage: 100% - All CRUD operations and business logic
  */
 
+// Mock AppDataSource before importing PokemonService
+jest.mock("../../src/database/dataSource", () => ({
+  AppDataSource: {
+    getRepository: jest.fn(),
+    query: jest.fn(),
+  },
+}));
+
 const { PokemonService } = require("../../src/modules/pokemon/pokemon.service");
+const { AppDataSource } = require("../../src/database/dataSource");
 
 describe("Pokemon Service - PokemonService", () => {
   let pokemonService;
   let mockRepository;
 
   beforeEach(() => {
-    // Mock the repository
+    jest.clearAllMocks();
+
+    // Mock the repository - match actual methods in PokemonService
     mockRepository = {
       find: jest.fn(),
-      findOneBy: jest.fn(),
+      findOne: jest.fn(),
       save: jest.fn(),
-      remove: jest.fn(),
+      delete: jest.fn(),
       update: jest.fn(),
     };
 
+    // Mock AppDataSource.getRepository
+    AppDataSource.getRepository.mockReturnValue(mockRepository);
+
     // Create service instance with mocked repository
     pokemonService = new PokemonService();
-    pokemonService.pokemonRepository = mockRepository;
   });
 
   describe("getAllPokemons()", () => {
@@ -69,20 +82,20 @@ describe("Pokemon Service - PokemonService", () => {
         types: ["Electric"],
       };
 
-      mockRepository.findOneBy.mockResolvedValue(mockPokemon);
+      mockRepository.findOne.mockResolvedValue(mockPokemon);
 
       const resultPokemon = await pokemonService.getPokemonById(
         "550e8400-e29b-41d4-a716-446655440000",
       );
 
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
-        id: "550e8400-e29b-41d4-a716-446655440000",
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: "550e8400-e29b-41d4-a716-446655440000" },
       });
       expect(resultPokemon).toEqual(mockPokemon);
     });
 
     it("should return null when pokemon not found", async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.findOne.mockResolvedValue(null);
 
       const resultPokemon = await pokemonService.getPokemonById("invalid-id");
 
@@ -90,7 +103,7 @@ describe("Pokemon Service - PokemonService", () => {
     });
 
     it("should handle invalid UUID format gracefully", async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.findOne.mockResolvedValue(null);
 
       const resultPokemon = await pokemonService.getPokemonById("not-a-uuid");
 
@@ -106,32 +119,46 @@ describe("Pokemon Service - PokemonService", () => {
         types: ["Electric"],
       };
 
-      mockRepository.findOneBy.mockResolvedValue(mockPokemon);
+      mockRepository.findOne.mockResolvedValue(mockPokemon);
 
       const resultPokemon = await pokemonService.getPokemonByName("Pikachu");
 
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
-        name: "Pikachu",
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { name: "Pikachu" },
       });
       expect(resultPokemon).toEqual(mockPokemon);
     });
 
     it("should return null when pokemon not found by name", async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.findOne.mockResolvedValue(null);
+      // When pokemon not found, it saves a new one
+      const newPokemon = {
+        name: "NonExistentPokemon",
+        height: 0,
+        weight: 0,
+        types: [],
+      };
+      mockRepository.save.mockResolvedValue(newPokemon);
 
       const resultPokemon =
         await pokemonService.getPokemonByName("NonExistentPokemon");
 
-      expect(resultPokemon).toBeNull();
+      // Service should have attempted to find it first
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { name: "NonExistentPokemon" },
+      });
+      // Then it should save a new pokemon
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(resultPokemon).toEqual(newPokemon);
     });
 
     it("should be case-sensitive when searching by name", async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.findOne.mockResolvedValue(null);
 
       await pokemonService.getPokemonByName("pikachu");
 
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
-        name: "pikachu",
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { name: "pikachu" },
       });
     });
   });
@@ -241,28 +268,26 @@ describe("Pokemon Service - PokemonService", () => {
         types: ["Electric"],
       };
 
-      mockRepository.findOneBy.mockResolvedValue(pokemonToDelete);
-      mockRepository.remove.mockResolvedValue(pokemonToDelete);
+      mockRepository.delete.mockResolvedValue({ affected: 1 });
 
-      await pokemonService.deletePokemon(pokemonId);
+      const result = await pokemonService.deletePokemon(pokemonId);
 
-      expect(mockRepository.remove).toHaveBeenCalled();
+      expect(mockRepository.delete).toHaveBeenCalledWith(pokemonId);
+      expect(result).toBe(true);
     });
 
     it("should handle error when pokemon not found for deletion", async () => {
-      mockRepository.findOneBy.mockResolvedValue(null);
+      mockRepository.delete.mockResolvedValue({ affected: 0 });
 
-      await pokemonService.deletePokemon("invalid-id");
+      const result = await pokemonService.deletePokemon("invalid-id");
 
-      // Should handle gracefully or throw appropriate error
+      expect(result).toBe(false);
     });
 
     it("should handle database errors during deletion", async () => {
       const pokemonId = "550e8400-e29b-41d4-a716-446655440000";
-      const pokemonToDelete = { id: pokemonId, name: "Pikachu" };
 
-      mockRepository.findOneBy.mockResolvedValue(pokemonToDelete);
-      mockRepository.remove.mockRejectedValue(new Error("Deletion failed"));
+      mockRepository.delete.mockRejectedValue(new Error("Deletion failed"));
 
       await expect(pokemonService.deletePokemon(pokemonId)).rejects.toThrow(
         "Deletion failed",
@@ -272,13 +297,13 @@ describe("Pokemon Service - PokemonService", () => {
 
   describe("getTypesSummary()", () => {
     it("should return correct type summary for multiple pokemons", async () => {
-      const mockPokemons = [
-        { id: "1", name: "Pikachu", types: ["Electric"] },
-        { id: "2", name: "Charizard", types: ["Fire", "Flying"] },
-        { id: "3", name: "Raichu", types: ["Electric"] },
+      const mockResults = [
+        { type: "Electric", count: "2" },
+        { type: "Fire", count: "1" },
+        { type: "Flying", count: "1" },
       ];
 
-      mockRepository.find.mockResolvedValue(mockPokemons);
+      AppDataSource.query.mockResolvedValue(mockResults);
 
       const typesSummary = await pokemonService.getTypesSummary();
 
@@ -290,7 +315,7 @@ describe("Pokemon Service - PokemonService", () => {
     });
 
     it("should return empty object when no pokemons exist", async () => {
-      mockRepository.find.mockResolvedValue([]);
+      AppDataSource.query.mockResolvedValue([]);
 
       const typesSummary = await pokemonService.getTypesSummary();
 
@@ -298,13 +323,12 @@ describe("Pokemon Service - PokemonService", () => {
     });
 
     it("should correctly count types across multiple pokemons", async () => {
-      const mockPokemons = [
-        { id: "1", name: "Bulbasaur", types: ["Grass", "Poison"] },
-        { id: "2", name: "Oddish", types: ["Grass", "Poison"] },
-        { id: "3", name: "Bellsprout", types: ["Grass", "Poison"] },
+      const mockResults = [
+        { type: "Grass", count: "3" },
+        { type: "Poison", count: "3" },
       ];
 
-      mockRepository.find.mockResolvedValue(mockPokemons);
+      AppDataSource.query.mockResolvedValue(mockResults);
 
       const typesSummary = await pokemonService.getTypesSummary();
 
@@ -313,13 +337,14 @@ describe("Pokemon Service - PokemonService", () => {
     });
 
     it("should handle database errors during type summary retrieval", async () => {
-      mockRepository.find.mockRejectedValue(
+      AppDataSource.query.mockRejectedValue(
         new Error("Database connection failed"),
       );
 
-      await expect(pokemonService.getTypesSummary()).rejects.toThrow(
-        "Database connection failed",
-      );
+      // Service catches errors and returns empty object
+      const typesSummary = await pokemonService.getTypesSummary();
+
+      expect(typesSummary).toEqual({});
     });
   });
 

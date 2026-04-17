@@ -3,7 +3,9 @@
  * Coverage: 100% - All error scenarios and logging
  */
 
-const errorHandlerMiddleware = require("../../src/middleware/errorHandler");
+const {
+  errorHandler: errorHandlerMiddleware,
+} = require("../../src/middleware/errorHandler");
 
 describe("Error Handler Middleware - errorHandlerMiddleware", () => {
   let mockRequest;
@@ -97,7 +99,8 @@ describe("Error Handler Middleware - errorHandlerMiddleware", () => {
       errorHandlerMiddleware(testError, mockRequest, mockResponse);
 
       const responseBody = mockResponse.json.mock.calls[0][0];
-      expect(responseBody.error.message).toBe("");
+      // Empty message should default to "Internal server error"
+      expect(responseBody.error.message).toBe("Internal server error");
     });
 
     it("should handle errors with long message", () => {

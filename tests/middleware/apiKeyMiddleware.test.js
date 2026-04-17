@@ -3,7 +3,7 @@
  * Coverage: 100% - All code paths and error scenarios
  */
 
-const validateApiKeyMiddleware = require("../../src/middleware/apiKeyMiddleware");
+const { apiKeyMiddleware } = require("../../src/middleware/apiKeyMiddleware");
 
 describe("API Key Middleware - validateApiKeyMiddleware", () => {
   let mockRequest;
@@ -32,7 +32,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should call next() when valid API key is provided", () => {
       mockRequest.headers["x-api-key"] = "test_secret_key_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockResponse.status).not.toHaveBeenCalled();
@@ -42,7 +42,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
       mockRequest.method = "POST";
       mockRequest.headers["x-api-key"] = "test_secret_key_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
@@ -51,7 +51,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
       mockRequest.path = "/api/pokemons/123";
       mockRequest.headers["x-api-key"] = "test_secret_key_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
@@ -61,7 +61,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when x-api-key header is missing", () => {
       mockRequest.headers = {};
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -74,7 +74,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when x-api-key is empty string", () => {
       mockRequest.headers["x-api-key"] = "";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -82,7 +82,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when x-api-key is undefined", () => {
       mockRequest.headers["x-api-key"] = undefined;
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -92,7 +92,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when invalid API key is provided", () => {
       mockRequest.headers["x-api-key"] = "wrong_secret_key";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -105,7 +105,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when API key has extra characters", () => {
       mockRequest.headers["x-api-key"] = "test_secret_key_12345_extra";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -113,7 +113,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return 401 when API key is partially correct", () => {
       mockRequest.headers["x-api-key"] = "test_secret_key_1234";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -121,7 +121,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should be case-sensitive and reject mismatched case", () => {
       mockRequest.headers["x-api-key"] = "TEST_SECRET_KEY_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -132,7 +132,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
       delete process.env.PROCESS_API_KEY;
       mockRequest.headers["x-api-key"] = "test_secret_key_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -141,7 +141,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
       process.env.PROCESS_API_KEY = "";
       mockRequest.headers["x-api-key"] = "test_secret_key_12345";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
     });
@@ -156,7 +156,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
       mockRequest.headers["x-api-key"] = mockRequest.headers["X-API-KEY"];
       delete mockRequest.headers["X-API-KEY"];
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
@@ -166,7 +166,7 @@ describe("API Key Middleware - validateApiKeyMiddleware", () => {
     it("should return proper error response format on 401", () => {
       mockRequest.headers["x-api-key"] = "invalid_key";
 
-      validateApiKeyMiddleware(mockRequest, mockResponse, mockNext);
+      apiKeyMiddleware(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       const callArgument = mockResponse.json.mock.calls[0][0];

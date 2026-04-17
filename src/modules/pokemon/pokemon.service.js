@@ -20,6 +20,26 @@ class PokemonService {
   }
 
   /**
+   * Create a new pokemon record
+   */
+  async createPokemon(pokemonData) {
+    const { name, height, weight, types = [] } = pokemonData;
+
+    if (!name || name.trim() === "") {
+      throw new Error("Name cannot be empty");
+    }
+
+    const pokemon = {
+      name,
+      height,
+      weight,
+      types,
+    };
+
+    return this.pokemonRepository.save(pokemon);
+  }
+
+  /**
    * Get all saved pokemon searches
    */
   async getAllPokemons() {

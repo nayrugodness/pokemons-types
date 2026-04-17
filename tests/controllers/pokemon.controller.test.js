@@ -3,6 +3,13 @@
  * Coverage: 100% - All HTTP endpoints and request/response handling
  */
 
+// Mock AzureBlobService to prevent initialization errors
+jest.mock("../../src/services/azureBlobService", () => ({
+  AzureBlobService: jest.fn().mockImplementation(() => ({
+    uploadAndGetSAS: jest.fn(),
+  })),
+}));
+
 const {
   PokemonController,
 } = require("../../src/modules/pokemon/pokemon.controller");
@@ -18,6 +25,7 @@ describe("Pokemon Controller - PokemonController", () => {
       getAllPokemons: jest.fn(),
       getPokemonById: jest.fn(),
       getPokemonByName: jest.fn(),
+      savePokemon: jest.fn(),
       createPokemon: jest.fn(),
       updatePokemon: jest.fn(),
       deletePokemon: jest.fn(),
@@ -172,7 +180,7 @@ describe("Pokemon Controller - PokemonController", () => {
       };
 
       mockRequest.body = newPokemonData;
-      mockPokemonService.createPokemon.mockResolvedValue(savedPokemon);
+      mockPokemonService.savePokemon.mockResolvedValue(savedPokemon);
       mockPokemonService.getTypesSummary.mockResolvedValue({ Electric: 1 });
 
       await pokemonController.createPokemon(mockRequest, mockResponse);
@@ -200,7 +208,7 @@ describe("Pokemon Controller - PokemonController", () => {
         weight: 60,
         types: ["Electric"],
       };
-      mockPokemonService.createPokemon.mockRejectedValue(
+      mockPokemonService.savePokemon.mockRejectedValue(
         new Error("Creation failed"),
       );
 
@@ -347,7 +355,7 @@ describe("Pokemon Controller - PokemonController", () => {
         weight: 60,
         types: ["Electric"],
       };
-      mockPokemonService.createPokemon.mockResolvedValue({
+      mockPokemonService.savePokemon.mockResolvedValue({
         id: "1",
         ...mockRequest.body,
       });
