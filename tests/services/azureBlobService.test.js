@@ -35,8 +35,11 @@ describe("Azure Blob Service - AzureBlobService", () => {
       jest.resetModules();
 
       expect(() => {
-        require("../../src/services/azureBlobService");
-      }).toThrow();
+        const {
+          AzureBlobService,
+        } = require("../../src/services/azureBlobService");
+        new AzureBlobService();
+      }).toThrow("AZURE_STORAGE_CONNECTION_STRING");
     });
   });
 
