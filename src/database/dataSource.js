@@ -13,6 +13,10 @@ const AppDataSource = new DataSource({
   entities: [PokemonEntity],
   subscribers: [],
   migrations: ["src/database/migrations/*.js"],
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 module.exports = { AppDataSource };
