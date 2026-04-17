@@ -236,6 +236,70 @@ curl -X DELETE http://localhost:3000/api/pokemons/550e8400-e29b-41d4-a716-446655
 }
 ```
 
+## Production Examples (Azure)
+
+Base URL: `https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net`
+
+### Create Pokemon (Production)
+
+```bash
+curl -X POST https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: mi_super_clave_secreta_123" \
+  -d '{
+    "name": "Pikachu",
+    "height": 4,
+    "weight": 60,
+    "types": ["Electric"]
+  }'
+```
+
+### Get All Pokemons (Production)
+
+```bash
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons \
+  -H "x-api-key: mi_super_clave_secreta_123"
+```
+
+### Get Pokemon by ID (Production)
+
+```bash
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons/id/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: mi_super_clave_secreta_123"
+```
+
+### Get Pokemon by Name (Production)
+
+```bash
+curl -X GET https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons/name/Pikachu \
+  -H "x-api-key: mi_super_clave_secreta_123"
+```
+
+### Update Pokemon (Production)
+
+```bash
+curl -X PUT https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: mi_super_clave_secreta_123" \
+  -d '{
+    "height": 5,
+    "weight": 65
+  }'
+```
+
+### Delete Pokemon (Production)
+
+```bash
+curl -X DELETE https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/api/pokemons/550e8400-e29b-41d4-a716-446655440000 \
+  -H "x-api-key: mi_super_clave_secreta_123"
+```
+
+### Health Check (Production)
+
+```bash
+curl https://reportespokemons-cnd2eycsdqc6dacu.canadacentral-01.azurewebsites.net/health
+```
+
 ### Error Responses
 
 Missing API Key (401):
